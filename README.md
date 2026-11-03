@@ -17,6 +17,7 @@ A full-stack inventory management application developed using **Java 21, Spring 
 - [Security](#security)
 - [Screenshots](#screenshots)
 - [Future Enhancements](#future-enhancements)
+- [Learning Outcomes](#learning-outcomes)
 - [Developer](#developer)
 
 ---
@@ -39,7 +40,7 @@ The application follows a full-stack architecture:
 ### Backend Features
 
 - **JWT Authentication:** Token-based user authentication and session validation.
-- **Role-Based Access:** Supports role-based application access for different users.
+- **Role-Based Access:** Supports role-based application access.
 - **Product Management:** Create, view, update, and delete product records.
 - **Category Management:** Organize products into categories.
 - **Supplier Management:** Associate products with suppliers.
@@ -146,6 +147,12 @@ Inventory-Monitoring-and-Reporting-System/
 │   │
 │   └── package.json
 │
+├── screenshots/
+│   ├── login.png
+│   ├── dashboard.png
+│   ├── product.png
+│   └── report.png
+│
 └── README.md
 ```
 
@@ -154,33 +161,34 @@ Inventory-Monitoring-and-Reporting-System/
 ## Architecture Overview
 
 ```text
-             USER
-               |
-               v
-       React.js Frontend
-               |
-               | HTTP Requests
-               | JWT Authorization
-               v
-       Spring Boot Backend
-               |
-        -----------------
-        |       |       |
-        v       v       v
-    Controller Service Security
-        |
-        v
+                 USER
+                   |
+                   v
+            React.js Frontend
+                   |
+            HTTP Requests
+            JWT Authorization
+                   |
+                   v
+           Spring Boot Backend
+                   |
+          ---------------------
+          |          |        |
+          v          v        v
+      Controller  Service  Security
+          |
+          v
       DAO / Repository
-        |
-        v
-     Spring Data JPA
-        |
-        v
-    Oracle Database
-        |
-   -------------------
-   |       |         |
-Products Categories Suppliers
+          |
+          v
+      Spring Data JPA
+          |
+          v
+      Oracle Database
+          |
+      -----------------
+      |       |       |
+   Products Categories Suppliers
 ```
 
 ---
@@ -191,13 +199,13 @@ This project uses **Oracle Database 26ai Free** with the `FREEPDB1` pluggable da
 
 ### Database Details
 
-| Property      | Value           |
-| ------------- | --------------- |
-| Database      | Oracle Database |
-| Service Name  | FREEPDB1        |
-| Database User | inventory_user  |
-| Database      | Oracle SQL      |
-| ORM           | Hibernate / JPA |
+| Property       | Value                     |
+| -------------- | ------------------------- |
+| Database       | Oracle Database 26ai Free |
+| Service Name   | FREEPDB1                  |
+| Database User  | inventory_user            |
+| Query Language | Oracle SQL                |
+| ORM            | Hibernate / JPA           |
 
 ### Main Database Tables
 
@@ -261,7 +269,7 @@ cd Inventory-Monitoring-and-Reporting-System
 3. Create or configure the `inventory_user` database account.
 4. Ensure the required database privileges are available.
 
-Example connection:
+Database connection URL:
 
 ```text
 jdbc:oracle:thin:@localhost:1521/FREEPDB1
@@ -364,7 +372,7 @@ The backend provides REST APIs for authentication and inventory operations.
 | PUT    | `/api/product/{id}` | Update a product  |
 | DELETE | `/api/product/{id}` | Delete a product  |
 
-**Note:** Additional endpoints for stock operations and reporting are implemented according to the backend controllers.
+**Note:** Refer to the backend controllers for the complete API endpoint mappings.
 
 ---
 
@@ -383,33 +391,21 @@ The backend provides REST APIs for authentication and inventory operations.
 
 Add screenshots of your actual application here to help recruiters understand the project.
 
-Suggested screenshots:
-
-## Screenshots
-
-### Login Page
+### 1. Login Page
 
 ![Login Page](screenshots/login.png)
 
-### Dashboard
+### 2. Dashboard
 
 ![Dashboard](screenshots/dashboard.png)
 
-### Product Management
+### 3. Product Management Page
 
-![Product Management](screenshots/products.png)
+![Product Management](screenshots/product.png)
 
-### Add Product
+### 4. Inventory Reports
 
-![Add Product](screenshots/add-product.png)
-
-Example:
-
-```markdown
-![Dashboard](screenshots/dashboard.png)
-
-![Product Management](screenshots/products.png)
-```
+![Inventory Reports](screenshots/report.png)
 
 ---
 
