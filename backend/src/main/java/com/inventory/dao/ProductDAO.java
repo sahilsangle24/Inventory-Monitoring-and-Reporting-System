@@ -1,3 +1,4 @@
+
 package com.inventory.dao;
 
 import com.inventory.database_system.entity.Product;
@@ -16,25 +17,26 @@ public class ProductDAO {
         this.productRepository = productRepository;
     }
 
-    // ── CREATE ───────────────────────────────────────────────────────────────
-
+    // CREATE
     public void addProduct(Product product) {
+        product.setId(null);
         productRepository.save(product);
     }
 
-    // ── READ ─────────────────────────────────────────────────────────────────
+    // UPDATE
+    public Product updateProduct(Product product) {
+        return productRepository.save(product);
+    }
 
+    // READ
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    /**
-     * Replaces old: getProductById(int id)
-     * Now returns Optional — callers must handle not-found case.
-     */
     public Product getProductById(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() ->
+                    new RuntimeException("Product not found with id: " + id));
     }
 
     public Optional<Product> findBySku(String sku) {
@@ -61,37 +63,23 @@ public class ProductDAO {
         return productRepository.findByNameContainingIgnoreCase(name);
     }
 
-    /**
-     * Replaces old raw SQL low-stock query.
-     * Fetches products whose quantity <= their own reorderLevel.
-     * Pass product.getReorderLevel() or a fixed threshold.
-     */
     public List<Product> getLowStockProducts(Integer threshold) {
         return productRepository.findByQuantityLessThanEqual(threshold);
     }
 
-    // ── UPDATE ───────────────────────────────────────────────────────────────
-
-    /**
-     * Replaces old: updateStock(int id, int stock)
-     * Now operates on the `quantity` field (renamed from `stock`).
-     */
+    // UPDATE STOCK
     public void updateStock(Long id, int quantity) {
         Product product = getProductById(id);
         product.setQuantity(quantity);
         productRepository.save(product);
     }
 
-    // ── DELETE ───────────────────────────────────────────────────────────────
-
+    // DELETE
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
     }
 
-    /**
-     * Soft delete — marks product inactive instead of removing from DB.
-     * Preferred over deleteProduct() to preserve transaction history.
-     */
+    // SOFT DELETE
     public void deactivateProduct(Long id) {
         Product product = getProductById(id);
         product.setActive(false);

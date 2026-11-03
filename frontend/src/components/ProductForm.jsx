@@ -1,30 +1,61 @@
-import { useState, useEffect } from 'react';
-import { ValidationUtils } from '../utilities/ValidationUtils';
+import { useState, useEffect } from "react";
+import { ValidationUtils } from "../utilities/ValidationUtils";
 
 const EMPTY = {
-  name: '', sku: '', description: '', categoryId: '', supplierId: '',
-  quantity: '', unitPrice: '', reorderLevel: 10,
+  name: "",
+  sku: "",
+  description: "",
+  categoryId: "",
+  supplierId: "",
+  quantity: "",
+  unitPrice: "",
+  reorderLevel: 10,
 };
-const ID_OPTIONS = [1, 2, 3, 4];
+
+// Actual categories from your Oracle database
+const CATEGORY_OPTIONS = [
+  { id: 1, name: "Electronics" },
+  { id: 2, name: "Stationery" },
+  { id: 3, name: "Furniture" },
+  { id: 4, name: "Food" },
+];
+
+// Actual suppliers from your Oracle database
+const SUPPLIER_OPTIONS = [
+  { id: 1, name: "Default Supplier" },
+  { id: 2, name: "Global Traders" },
+  { id: 3, name: "Tech World" },
+  { id: 4, name: "ABC Traders" },
+];
 
 function buildInitialForm(initial) {
   if (!initial) return { ...EMPTY };
+
   return {
-    ...EMPTY, ...initial,
-    categoryId: initial?.category?.id ?? initial?.categoryId ?? '',
-    supplierId: initial?.supplier?.id ?? initial?.supplierId ?? '',
-    unitPrice:  initial?.unitPrice ?? initial?.price ?? '',
+    ...EMPTY,
+    ...initial,
+    categoryId: initial?.category?.id ?? initial?.categoryId ?? "",
+    supplierId: initial?.supplier?.id ?? initial?.supplierId ?? "",
+    unitPrice: initial?.unitPrice ?? initial?.price ?? "",
   };
 }
 
-// ✅ Hoisted — stable reference, React never remounts this
-function Field({ label, field, form, errors, setField, type = 'text', ...rest }) {
+// Field component
+function Field({
+  label,
+  field,
+  form,
+  errors,
+  setField,
+  type = "text",
+  ...rest
+}) {
   return (
     <div className="form-group">
       <label>{label}</label>
       <input
         type={type}
-        value={form[field] ?? ''}
+        value={form[field] ?? ""}
         onChange={setField(field)}
         {...rest}
       />
@@ -33,8 +64,13 @@ function Field({ label, field, form, errors, setField, type = 'text', ...rest })
   );
 }
 
-export default function ProductForm({ initial = null, onSubmit, onCancel, loading = false }) {
-  const [form,   setForm]   = useState(() => buildInitialForm(initial));
+export default function ProductForm({
+  initial = null,
+  onSubmit,
+  onCancel,
+  loading = false,
+}) {
+  const [form, setForm] = useState(() => buildInitialForm(initial));
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -42,19 +78,27 @@ export default function ProductForm({ initial = null, onSubmit, onCancel, loadin
     setErrors({});
   }, [initial]);
 
-  const setField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const setField = (field) => (e) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const errs = ValidationUtils.validateProduct(form);
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+
     setErrors({});
+
     await onSubmit({
       ...form,
-      categoryId:   Number(form.categoryId),
-      supplierId:   Number(form.supplierId),
-      quantity:     Number(form.quantity),
-      unitPrice:    Number(form.unitPrice),
+      categoryId: Number(form.categoryId),
+      supplierId: Number(form.supplierId),
+      quantity: Number(form.quantity),
+      unitPrice: Number(form.unitPrice),
       reorderLevel: Number(form.reorderLevel),
     });
   };
@@ -62,50 +106,123 @@ export default function ProductForm({ initial = null, onSubmit, onCancel, loadin
   return (
     <form onSubmit={handleSubmit} className="form-card">
       <div className="form-grid-2">
-        <Field label="Product Name *" field="name"     form={form} errors={errors} setField={setField} placeholder="e.g. Wireless Mouse" />
-        <Field label="SKU"            field="sku"      form={form} errors={errors} setField={setField} placeholder="e.g. WM-001" />
+        <Field
+          label="Product Name *"
+          field="name"
+          form={form}
+          errors={errors}
+          setField={setField}
+          placeholder="e.g. Wireless Mouse"
+        />
 
-        {/* selects stay inline — no Field wrapper needed here */}
+        <Field
+          label="SKU"
+          field="sku"
+          form={form}
+          errors={errors}
+          setField={setField}
+          placeholder="e.g. WM-001"
+        />
+
+        {/* Category dropdown */}
         <div className="form-group">
-          <label>Category ID *</label>
-          <select value={form.categoryId ?? ''} onChange={setField('categoryId')}>
-            <option value="">Select Category ID</option>
-            {ID_OPTIONS.map((id) => <option key={id} value={id}>{id}</option>)}
+          <label>Category *</label>
+          <select
+            value={form.categoryId ?? ""}
+            onChange={setField("categoryId")}
+          >
+            <option value="">Select Category</option>
+
+            {CATEGORY_OPTIONS.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
           </select>
-          {errors.categoryId && <div className="error-msg">{errors.categoryId}</div>}
+
+          {errors.categoryId && (
+            <div className="error-msg">{errors.categoryId}</div>
+          )}
         </div>
 
+        {/* Supplier dropdown */}
         <div className="form-group">
-          <label>Supplier ID *</label>
-          <select value={form.supplierId ?? ''} onChange={setField('supplierId')}>
-            <option value="">Select Supplier ID</option>
-            {ID_OPTIONS.map((id) => <option key={id} value={id}>{id}</option>)}
+          <label>Supplier *</label>
+          <select
+            value={form.supplierId ?? ""}
+            onChange={setField("supplierId")}
+          >
+            <option value="">Select Supplier</option>
+
+            {SUPPLIER_OPTIONS.map((supplier) => (
+              <option key={supplier.id} value={supplier.id}>
+                {supplier.name}
+              </option>
+            ))}
           </select>
-          {errors.supplierId && <div className="error-msg">{errors.supplierId}</div>}
+
+          {errors.supplierId && (
+            <div className="error-msg">{errors.supplierId}</div>
+          )}
         </div>
 
-        <Field label="Quantity *"       field="quantity"     type="number" min="0" placeholder="0"    form={form} errors={errors} setField={setField} />
-        <Field label="Unit Price (₹) *" field="unitPrice"    type="number" min="0" step="0.01" placeholder="0.00" form={form} errors={errors} setField={setField} />
-        <Field label="Reorder Level"    field="reorderLevel" type="number" min="0" placeholder="10"   form={form} errors={errors} setField={setField} />
+        <Field
+          label="Quantity *"
+          field="quantity"
+          type="number"
+          min="0"
+          placeholder="0"
+          form={form}
+          errors={errors}
+          setField={setField}
+        />
 
-        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+        <Field
+          label="Unit Price (₹) *"
+          field="unitPrice"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+          form={form}
+          errors={errors}
+          setField={setField}
+        />
+
+        <Field
+          label="Reorder Level"
+          field="reorderLevel"
+          type="number"
+          min="0"
+          placeholder="10"
+          form={form}
+          errors={errors}
+          setField={setField}
+        />
+
+        <div className="form-group" style={{ gridColumn: "1 / -1" }}>
           <label>Description</label>
           <input
             type="text"
-            value={form.description ?? ''}
-            onChange={setField('description')}
+            value={form.description ?? ""}
+            onChange={setField("description")}
             placeholder="Short description"
           />
-          {errors.description && <div className="error-msg">{errors.description}</div>}
+          {errors.description && (
+            <div className="error-msg">{errors.description}</div>
+          )}
         </div>
       </div>
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Saving…' : (initial ? 'Update Product' : 'Add Product')}
+          {loading ? "Saving…" : initial ? "Update Product" : "Add Product"}
         </button>
+
         {onCancel && (
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
+            Cancel
+          </button>
         )}
       </div>
     </form>

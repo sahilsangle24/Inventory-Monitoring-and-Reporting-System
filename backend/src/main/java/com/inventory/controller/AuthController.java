@@ -1,18 +1,18 @@
+
 package com.inventory.controller;
 
 import com.inventory.dto.AuthRequest;
 import com.inventory.dto.AuthResponse;
 import com.inventory.dto.RegisterRequest;
 import com.inventory.authservice.AuthService;
+import com.inventory.entity.User;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Public auth endpoints — no JWT required (permitted in WebSecurityConfig).
- *
- * POST /auth/register  — create new account
- * POST /auth/login     — get JWT token
- */
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -24,20 +24,39 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthResponse> register(
+            @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-//        return ResponseEntity.ok(authService.login(request));
-//    }
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<?> login(
+            @RequestBody AuthRequest request) {
         try {
             return ResponseEntity.ok(authService.login(request));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(e.getMessage());
         }
+    }
+
+    // Get currently authenticated user
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+
+        if (authentication == null ||
+                !authentication.isAuthenticated() ||
+                !(authentication.getPrincipal() instanceof User)) {
+            return ResponseEntity.status(401)
+                    .body("User is not authenticated");
+        }
+
+        User user = (User) authentication.getPrincipal();
+
+        return ResponseEntity.ok(Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "role", user.getRole().name()
+        ));
     }
 }

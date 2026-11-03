@@ -61,9 +61,9 @@ export function useProducts() {
   };
 
   const editProduct = async (id, data) => {
-    await api.post('/api/product', toApiPayload(data, id));
-    await fetchProducts();
-  };
+  await api.put(`/api/product/${id}`, toApiPayload(data, id));
+  await fetchProducts();
+};
 
   const deleteProduct = async (id) => {
     await api.delete(`/api/product/${id}`);

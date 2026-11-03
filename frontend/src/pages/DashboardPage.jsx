@@ -1,129 +1,268 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
-import SummaryCard from '../components/SummaryCard';
-import ChartComponent from '../components/ChartComponent';
-import LowStockBadge from '../components/LowStockBadge';
-import { useProducts } from '../hooks/useProducts';
-import { useToast } from '../context/ToastContext';
-import { FormatUtils } from '../utilities/FormatUtils';
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+import SummaryCard from "../components/SummaryCard";
+import ChartComponent from "../components/ChartComponent";
+import LowStockBadge from "../components/LowStockBadge";
+
+import { useProducts } from "../hooks/useProducts";
+import { useToast } from "../context/ToastContext";
+import { FormatUtils } from "../utilities/FormatUtils";
 
 export default function DashboardPage() {
   const { products, loading, lowStockProducts } = useProducts();
   const toast = useToast();
 
-  const totalValue = products.reduce((acc, p) => acc + p.quantity * p.unitPrice, 0);
+  const totalValue = products.reduce(
+    (total, product) =>
+      total + Number(product.quantity || 0) * Number(product.unitPrice || 0),
+    0,
+  );
 
-  // Real-time low stock notification
+  const categoryMap = {};
+
+  products.forEach((product) => {
+    const category =
+      typeof product.category === "object"
+        ? product.category?.name || "Uncategorized"
+        : product.category || "Uncategorized";
+
+    categoryMap[category] = (categoryMap[category] || 0) + 1;
+  });
+
+  const chartData = Object.entries(categoryMap).map(([label, value]) => ({
+    label,
+    value,
+  }));
+
   useEffect(() => {
     if (!loading && lowStockProducts.length > 0) {
       toast.warning(
-        'Low Stock Alert',
-        `${lowStockProducts.length} product${lowStockProducts.length > 1 ? 's are' : ' is'} below reorder level.`
+        "Low Stock Alert",
+        `${lowStockProducts.length} product${
+          lowStockProducts.length > 1 ? "s are" : " is"
+        } below reorder level.`,
       );
     }
-  }, [loading]);
+  }, [loading, lowStockProducts.length]);
 
-  // Category chart
-  const categoryMap = {};
-  products.forEach(p => { categoryMap[p.category] = (categoryMap[p.category] || 0) + 1; });
-  const chartData = Object.entries(categoryMap).map(([label, value]) => ({ label, value }));
+  const today = new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <div className="page-layout">
+    <div className="page-layout dashboard-layout">
       <Sidebar lowStockCount={lowStockProducts.length} />
-      <div className="main-content">
+
+      <main className="main-content dashboard-main">
         <Navbar title="Dashboard" lowStockCount={lowStockProducts.length} />
-        <div className="page-inner">
 
-          <div className="page-header">
-            <h1 className="page-title">Overview</h1>
-            <p className="page-subtitle">Your inventory at a glance — {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-          </div>
+        <div className="page-inner dashboard-page">
+          {/* Dashboard heading */}
+          <section className="dashboard-heading">
+            <div>
+              <span className="dashboard-eyebrow">INVENTORY MANAGEMENT</span>
 
-          {/* Summary cards */}
-          <div className="summary-grid">
-            <SummaryCard
-              label="Total Products"
-              value={loading ? '…' : FormatUtils.number(products.length)}
-              icon="📦" color="accent" delay={0}
-            />
-            <SummaryCard
-              label="Inventory Value"
-              value={loading ? '…' : FormatUtils.currency(totalValue)}
-              icon="₹" color="green" delay={80}
-            />
-            <SummaryCard
-              label="Low Stock Items"
-              value={loading ? '…' : lowStockProducts.length}
-              icon="⚠" color={lowStockProducts.length > 0 ? 'amber' : 'green'} delay={160}
-              trend={lowStockProducts.length > 0
-                ? <span style={{ color: 'var(--amber)' }}>⬇ Needs restocking</span>
-                : <span style={{ color: 'var(--green)' }}>✓ All stocked</span>
-              }
-            />
-            <SummaryCard
-              label="Categories"
-              value={loading ? '…' : Object.keys(categoryMap).length}
-              icon="🏷" color="purple" delay={240}
-            />
-          </div>
+              <h1 className="page-title">Overview</h1>
 
-          {/* Bottom panels */}
-          <div className="dash-grid">
+              <p className="page-subtitle">
+                Here's what's happening with your inventory today.
+              </p>
 
-            {/* Chart */}
-            <div className="dash-panel">
-              <div className="dash-panel-title">
-                Products by Category
-                <Link to="/products">View all →</Link>
+              <div className="dashboard-date">
+                <span>◷</span> {today}
               </div>
-              <ChartComponent data={chartData} height={200} />
             </div>
 
-            {/* Low stock list */}
-            <div className="dash-panel">
-              <div className="dash-panel-title">
-                Low Stock Alerts
-                {lowStockProducts.length > 0 && (
-                  <span className="badge badge-amber badge-pulse">{lowStockProducts.length} items</span>
+            <div className="dashboard-heading-actions">
+              <Link to="/products" className="dashboard-secondary-btn">
+                View Products
+              </Link>
+
+              <Link to="/add-product" className="dashboard-primary-btn">
+                <span>＋</span> Add Product
+              </Link>
+            </div>
+          </section>
+
+          {/* Summary cards */}
+          <section className="dashboard-stats-section">
+            <div className="dashboard-section-heading">
+              <div>
+                <h2>Inventory Summary</h2>
+                <p>Key metrics at a glance</p>
+              </div>
+
+              <span className="dashboard-live-indicator">
+                <span /> LIVE OVERVIEW
+              </span>
+            </div>
+
+            <div className="summary-grid dashboard-summary-grid">
+              <SummaryCard
+                label="Total Products"
+                value={loading ? "…" : FormatUtils.number(products.length)}
+                icon="📦"
+                color="accent"
+                delay={0}
+              />
+
+              <SummaryCard
+                label="Inventory Value"
+                value={loading ? "…" : FormatUtils.currency(totalValue)}
+                icon="₹"
+                color="green"
+                delay={80}
+              />
+
+              <SummaryCard
+                label="Low Stock Items"
+                value={loading ? "…" : lowStockProducts.length}
+                icon="⚠"
+                color={lowStockProducts.length > 0 ? "amber" : "green"}
+                delay={160}
+                trend={
+                  lowStockProducts.length > 0 ? (
+                    <span className="dashboard-warning-text">
+                      ↓ Needs restocking
+                    </span>
+                  ) : (
+                    <span className="dashboard-success-text">
+                      ✓ All stocked
+                    </span>
+                  )
+                }
+              />
+
+              <SummaryCard
+                label="Categories"
+                value={loading ? "…" : Object.keys(categoryMap).length}
+                icon="🏷"
+                color="purple"
+                delay={240}
+              />
+            </div>
+          </section>
+
+          {/* Analytics section */}
+          <section className="dashboard-analytics-section">
+            <div className="dashboard-section-heading">
+              <div>
+                <h2>Inventory Analytics</h2>
+                <p>Understand your stock distribution</p>
+              </div>
+            </div>
+
+            <div className="dash-grid dashboard-analytics-grid">
+              {/* Category chart */}
+              <div className="dash-panel dashboard-chart-panel">
+                <div className="dashboard-panel-heading">
+                  <div>
+                    <span className="dashboard-panel-icon">▥</span>
+                    <h3>Products by Category</h3>
+                    <p>Product distribution across categories</p>
+                  </div>
+
+                  <Link to="/products" className="dashboard-view-link">
+                    View all <span>→</span>
+                  </Link>
+                </div>
+
+                {loading ? (
+                  <div className="dashboard-empty-state">
+                    Loading inventory analytics...
+                  </div>
+                ) : chartData.length === 0 ? (
+                  <div className="dashboard-empty-state">
+                    <span>📊</span>
+                    <strong>No inventory data yet</strong>
+                    <p>Add products to view category analytics.</p>
+                    <Link to="/add-product">Add your first product →</Link>
+                  </div>
+                ) : (
+                  <div className="dashboard-chart-container">
+                    <ChartComponent data={chartData} height={240} />
+                  </div>
                 )}
               </div>
 
-              {lowStockProducts.length === 0 ? (
-                <div style={{ color: 'var(--green)', fontSize: '0.88rem', paddingTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span>✓</span> All products are sufficiently stocked.
+              {/* Low stock panel */}
+              <div className="dash-panel dashboard-stock-panel">
+                <div className="dashboard-panel-heading">
+                  <div>
+                    <span className="dashboard-panel-icon stock-icon">⚠</span>
+                    <h3>Low Stock Alerts</h3>
+                    <p>Products that need your attention</p>
+                  </div>
+
+                  <span className="dashboard-stock-count">
+                    {lowStockProducts.length} items
+                  </span>
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {lowStockProducts.slice(0, 6).map(p => (
-                    <div key={p.id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 14px',
-                      background: 'var(--bg3)',
-                      borderRadius: 'var(--r)',
-                      border: '1px solid var(--border)',
-                      transition: 'background 0.15s',
-                    }}>
-                      <div>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{p.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>{p.category}</div>
+
+                {loading ? (
+                  <div className="dashboard-empty-state">
+                    Checking stock levels...
+                  </div>
+                ) : lowStockProducts.length === 0 ? (
+                  <div className="dashboard-stock-empty">
+                    <div className="dashboard-stock-success-icon">✓</div>
+                    <strong>Everything looks good!</strong>
+                    <p>All products are sufficiently stocked.</p>
+                  </div>
+                ) : (
+                  <div className="dashboard-stock-list">
+                    {lowStockProducts.slice(0, 6).map((product) => (
+                      <div key={product.id} className="dashboard-stock-item">
+                        <div className="dashboard-stock-product">
+                          <div className="dashboard-product-icon">📦</div>
+
+                          <div className="dashboard-product-details">
+                            <strong>{product.name}</strong>
+                            <span>
+                              {typeof product.category === "object"
+                                ? product.category?.name || "Uncategorized"
+                                : product.category || "Uncategorized"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="dashboard-stock-status">
+                          <span className="dashboard-stock-quantity">
+                            {product.quantity}/{product.reorderLevel}
+                          </span>
+
+                          <LowStockBadge
+                            quantity={product.quantity}
+                            reorderLevel={product.reorderLevel}
+                          />
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontFamily: 'var(--mono)', fontSize: '0.82rem', color: 'var(--text2)' }}>
-                          {p.quantity}/{p.reorderLevel}
-                        </span>
-                        <LowStockBadge quantity={p.quantity} reorderLevel={p.reorderLevel} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+
+                {lowStockProducts.length > 6 && (
+                  <p className="dashboard-more-alerts">
+                    + {lowStockProducts.length - 6} more products need attention
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="dashboard-footer">
+            <span>InvenTrack Inventory Management</span>
+            <span>Manage smarter. Grow faster.</span>
+          </footer>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

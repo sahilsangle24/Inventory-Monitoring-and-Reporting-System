@@ -49,6 +49,16 @@ public class Controller {
         return ResponseEntity.status(HttpStatus.CREATED).body("Product added");
     }
 
+    @PutMapping("/product/{id}")
+public ResponseEntity<String> updateProduct(
+        @PathVariable Long id,
+        @RequestBody Product product) {
+
+    productService.updateProduct(id, product);
+
+    return ResponseEntity.ok("Product updated successfully");
+}
+
     /**
      * GET /api/products
      * Returns ALL products including inactive ones.
